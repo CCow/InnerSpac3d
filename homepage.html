@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InnerSpac3d App</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif; /* Using Inter font */
+            color: white;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            /* This background color provides a slight tint over the video where content isn't opaque */
+            background-color: rgba(36, 36, 39, 0.7); /* Slightly darker and more transparent */
+            min-height: 100vh; /* Ensure body takes full height */
+        }
+
+        #video-background {
+            position: fixed;
+            top: 50%; /* Vertically center the video */
+            left: 0;   /* Align to the left edge of the viewport */
+            width: 100%; /* Ensure the video always fills the width of the screen */
+            height: auto; /* Maintain the video's aspect ratio based on its width */
+            transform: translateY(-50%); /* Adjust position to truly center it vertically */
+            z-index: -2; /* Send video further to the background than the body background */
+            filter: brightness(80%);
+            /*
+            With 'width: 100%' and 'height: auto', the video will scale to fill the width.
+            If the viewport is taller than the video's aspect ratio, 'top: 50%; transform: translateY(-50%);'
+            will center it vertically, causing the 'body's background-color' to appear
+            as "black bars" at the top and bottom.
+            */
+        }
+
+        .overlay {
+            position: relative;
+            z-index: 0; /* Ensures overlay content is above the video */
+            display: flex;
+            min-height: 100vh; /* Ensure overlay takes full height to cover video */
+            background-color: transparent; /* Overlay itself is transparent */
+        }
+
+        /* Left Sidebar */
+        .sidebar-left {
+            width: fit-content;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+            /* padding: 20px; */
+            height: 100vh; /* Full height */
+            position: fixed; /* Keep sidebar fixed */
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border-top-right-radius: 8px; /* Rounded corners */
+            border-bottom-right-radius: 8px; /* Rounded corners */
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5); /* Subtle shadow */
+        }
+
+        .sidebar-left a {
+            margin-left: auto;
+            margin-right: auto;
+            color: white;
+            text-decoration: none;
+            padding: 15px 15px;
+            display: block;
+            font-size: 18px;
+            transition: color 0.3s ease;
+            border-radius: 4px;
+            /* width: 100%; */
+        }
+
+        .sidebar-left a:hover {
+            color: #4CAF50; /* Green on hover */
+            background-color: rgba(76, 175, 80, 0.2); /* Light green hover background */
+            width: fit-content;
+        }
+
+        .sidebar-left a:first-child {
+            margin-top: 20px;
+        }
+
+        /* Content Area */
+        .content {
+            margin-left: 250px; /* Space for the fixed left sidebar */
+            padding: 40px;
+            flex-grow: 1;
+            box-sizing: border-box;
+            display: flex; /* Use flexbox for content alignment */
+            flex-direction: column;
+            align-items: center; /* Center content horizontally */
+            justify-content: center; /* Center content vertically */
+            padding-top: 0;
+        }
+
+        .section {
+            padding: 80px 40px; /* Add padding for scrolling effect and horizontal spacing */
+            margin: 100px 0; /* Adjusted margin for better spacing, was 275px before */
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background for sections */
+            border-radius: 12px; /* More rounded corners */
+            text-align: center;
+            max-width: 900px; /* Max width for sections */
+            width: 100%; /* Ensure sections take full width within max-width */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Stronger shadow for sections */
+        }
+
+        .video-space{
+            padding: 500px 40px; /* Add padding for scrolling effect and horizontal spacing */
+            margin: 100px 0; /* Adjusted margin for better spacing, was 275px before */
+            border-radius: 12px; /* More rounded corners */
+            text-align: center;
+            max-width: 900px; /* Max width for sections */
+            width: 100%; /* Ensure sections take full width within max-width */
+        }
+
+        h1 {
+            font-size: 3.5em; /* Larger title */
+            margin-top: 20px;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+            text-align: center;
+            letter-spacing: 2px; /* Add letter spacing */
+        }
+
+        h2 {
+            font-size: 2.2em; /* Larger subheadings */
+            margin-bottom: 20px;
+            color: #4CAF50; /* Green color for subheadings */
+        }
+
+        p {
+            text-align: center;
+            line-height: 1.8; /* Better line spacing */
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 1.1em;
+        }
+
+        /* Form Styling */
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Space between form elements */
+            max-width: 600px;
+            margin: 30px auto 0; /* Center form and add top margin */
+            text-align: left; /* Align labels and inputs to the left */
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-form label {
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            color: #ccc;
+        }
+
+        .contact-form input[type="text"],
+        .contact-form input[type="email"],
+        .contact-form textarea {
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: white;
+            font-size: 1em;
+            width: 100%; /* Ensure inputs take full width of form group */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        .contact-form input[type="text"]:focus,
+        .contact-form input[type="email"]:focus,
+        .contact-form textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5);
+        }
+
+        .contact-form textarea {
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 120px; /* Minimum height for textarea */
+        }
+
+        .contact-form button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            align-self: center; /* Center the button within the form */
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .contact-form button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        /* Hamburger Menu */
+        .hamburger-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100; /* Ensure it's above everything */
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 35px;
+            height: 30px;
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+
+        .hamburger-menu .bar {
+            width: 100%;
+            height: 4px;
+            background-color: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* Right Sidebar */
+        .sidebar-right {
+            width: 250px; /* Slightly wider */
+            background-color: rgba(0, 0, 0, 0.85); /* More opaque */
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            transform: translateX(100%); /* Initially hidden off-screen */
+            transition: transform 0.3s ease-out; /* Smooth slide transition */
+            border-top-left-radius: 8px; /* Rounded corners */
+            border-bottom-left-radius: 8px; /* Rounded corners */
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5); /* Subtle shadow */
+            z-index: 99; /* Below hamburger, above content */
+        }
+
+        .sidebar-right.open {
+            transform: translateX(0); /* Slide in */
+        }
+
+        .sidebar-right a {
+            color: white;
+            text-decoration: none;
+            padding: 15px 10px; /* More padding */
+            display: block;
+            font-size: 1.2em; /* Larger font */
+            transition: color 0.3s ease, background-color 0.3s ease;
+            text-align: left;
+            border-radius: 4px;
+        }
+
+        .sidebar-right a:hover {
+            color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.2);
+            width: fit-content;
+        }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 768px) {
+            .sidebar-left {
+                width: 150px; /* Smaller left sidebar on small screens */
+            }
+            .content {
+                margin-left: 200px; /* Adjust content margin */
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2.5em;
+            }
+            h2 {
+                font-size: 1.8em;
+            }
+            .section {
+                padding: 60px 20px;
+                margin: 50px 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar-left {
+                width: 100%; /* Left sidebar takes full width on very small screens */
+                height: auto;
+                position: relative; /* Not fixed, scrolls with content */
+                border-radius: 0;
+            }
+            .sidebar-left a {
+                text-align: center;
+            }
+            .content {
+                margin-left: 0;
+                padding: 15px;
+            }
+            .section {
+                margin: 30px 0;
+                padding: 40px 15px;
+                border-radius: 8px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+            .hamburger-menu {
+                top: 15px;
+                right: 15px;
+            }
+            .sidebar-right {
+                width: 200px;
+            }
+            .contact-form {
+                max-width: 100%; /* Allow form to take full width on small screens */
+                padding: 0 10px; /* Add some horizontal padding */
+            }
+            .contact-form button {
+                width: 80%; /* Make button smaller on small screens */
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Background Video -->
+    <video autoplay muted loop id="video-background">
+        <!-- IMPORTANT: '.avi' format has very limited browser support for HTML5 video. -->
+        <!-- It is highly recommended to convert your video to '.mp4' or '.webm' for broad compatibility. -->
+        <!-- For testing, you can use a placeholder MP4 video, then replace with your converted file. -->
+        <!-- Example MP4 placeholder (replace with your converted video path): -->
+        <source src="Green_Rock_Spin.mp4" type="video/mp4">
+        <!-- If your Green_Rock_Orbit_Colored.avi is truly an AVI and you MUST use it, you could try type="video/quicktime", -->
+        <!-- but be aware it will likely only work in a few browsers. -->
+        <!-- <source src="Green_Rock_Orbit_Colored.avi" type="video/quicktime"> -->
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Overlay containing main content and sidebars -->
+    <div class="overlay">
+        <!-- Left Fixed Sidebar -->
+        <div class="sidebar-left">
+            <a href="#head">Home</a>
+            <a href="#section1">About</a>
+            <a href="#section2">Share a Dive Site</a>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="head" class="content">
+            <h1>InnerSpac3d</h1>
+            <p>Welcome to InnerSpac3d, the only interactive photogrammatry space on the market.</p>
+
+            <div id="video-space" class="video-space">
+
+            </div>
+
+            <div id="section1" class="section">
+                <h2>About Us</h2>
+                <p>Learn more about our mission, vision, and what drives us. We are dedicated to providing excellent solutions for your needs.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+            </div>
+
+            <div id="section2" class="section">
+                <h2>Share a Dive Site</h2>
+                <p>Have an amazing dive site you want to share with the InnerSpac3d community? Fill out the form below!</p>
+
+                <form class="contact-form" action="mailto:your-email@example.com" method="post" enctype="text/plain">
+                    <div class="form-group">
+                        <label for="name">Your Name:</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Your Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="site-name">Dive Site Name:</label>
+                        <input type="text" id="site-name" name="site_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location (City, State/Country):</label>
+                        <input type="text" id="location" name="location">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description of Dive Site:</label>
+                        <textarea id="description" name="description" rows="5"></textarea>
+                    </div>
+                    <button type="submit">Submit Dive Site</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-menu" id="hamburgerButton">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </button>
+
+    <!-- Right Slide-out Sidebar -->
+    <div class="sidebar-right" id="rightSidebar">
+        <a href="#">Auto rotate</a>
+        <a href="#">Toggle Environment</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburgerButton = document.getElementById('hamburgerButton');
+            const rightSidebar = document.getElementById('rightSidebar');
+
+            // Toggle the 'open' class on the right sidebar when hamburger is clicked
+            hamburgerButton.addEventListener('click', () => {
+                rightSidebar.classList.toggle('open');
+            });
+        });
+    </script>
+
+</body>
+</html>
